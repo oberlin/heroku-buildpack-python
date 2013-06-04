@@ -233,9 +233,37 @@ if (grep -Fiq "hg+" requirements.txt) then
   /app/.heroku/python/bin/pip install --use-mirrors mercurial | cleanup | indent
 fi
 
-# Install dependencies with Pip.
+##############################################################
+# python ldap
+##############################################################
+
+export LD_LIBRARY_PATH="/usr/lib:/usr/local/lib:$BUILD_DIR/.python-ldap/openldap/lib:/usr/local/ssl/lib"
+export LDFLAGS="-L/usr/local/lib -L$BUILD_DIR/.python-ldap/openldap/lib -L/usr/local/ssl/lib"
+export CPPFLAGS="-I/usr/local/include -I$BUILD_DIR/.python-ldap/openldap/include -I/usr/local/ssl/include"
+
+# Install dependencies.
 puts-step "Installing dependencies using Pip ($PIP_VERSION)"
+pip install --use-mirrors -r requirements.txt --src ./.heroku/src | indent
 /app/.heroku/python/bin/pip install --use-mirrors -r requirements.txt --exists-action=w --src=./.heroku/src | cleanup | indent
+#####
+
+pip install -U --no-install python-ldap
+cd build/python-ldap
+cat setup.cfg
+sed "s,library_dirs = \(.*\),library_dirs = $BUILD_DIR/.python-ldap/openldap/lib \1,g" setup.cfg > setup.cfg
+sed "s,include_dirs = \(.*\),include_dirs = $BUILD_DIR/.python-ldap/openldap/include \1,g" setup.cfg > setup.cfg
+cat setup.cfg
+pip install -U .
+cd ../..
+
+##############################################################
+# / python ldap
+##############################################################
+
+# Install dependencies with Pip.
+# Obviated by the custom code above.
+# puts-step "Installing dependencies using Pip ($PIP_VERSION)"
+# /app/.heroku/python/bin/pip install --use-mirrors -r requirements.txt --exists-action=w --src=./.heroku/src | cleanup | indent
 
 # Django collectstatic support.
 source $BIN_DIR/steps/collectstatic
