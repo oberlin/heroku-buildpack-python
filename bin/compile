@@ -69,11 +69,23 @@ source $BIN_DIR/steps/hooks/pre_compile
 
 # Install OpenLDAP
 # Added by Harris Lapiroff 2013, loosely inspired by https://github.com/ohack/heroku-buildpack-python-ldap/
+
+echo "-----> Installing BerkeleyDB"
+curl -O http://download.oracle.com/berkeley-db/db-4.8.24.NC.tar.gz
+tar -zxvf db-4.8.24.NC.tar.gz
+cd db-4.8.24.NC
+cd build_unix
+../dist/configure --prefix=$BUILD_DIR/.python-ldap/db4
+make
+make install
+cd $BUILD_DIR
+cp -R .python-ldap/db4 $CACHE_DIR/.python-ldap
+
 echo "-----> Fetching and installing openldap"
 curl -O http://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.35.tgz >/dev/null 2>&1
 tar -xvf openldap-2.4.35.tgz
 cd openldap-2.4.35
-./configure --enable-crypt --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
+./configure --enable-bdb --enable-crypt --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
 echo "-----> Installing ..."
 make depend
 make
