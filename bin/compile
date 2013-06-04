@@ -67,6 +67,21 @@ cd $BUILD_DIR
 # Experimental pre_compile hook.
 source $BIN_DIR/steps/hooks/pre_compile
 
+# Install OpenLDAP
+# Added by Harris Lapiroff 2013, loosely inspired by https://github.com/ohack/heroku-buildpack-python-ldap/
+echo "-----> Fetching and installing openldap"
+curl -O http://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.35.tgz >/dev/null 2>&1
+tar -xvf openldap-2.4.35.tgz
+cd openldap-2.4.35
+./configure --enable-crypt --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
+echo "-----> Installing ..."
+make depend
+make
+make install
+echo "openldap installed" | indent
+cd $BUILD_DIR
+cp -R .python-ldap/openldap $CACHE_DIR/.python-ldap
+
 # If no requirements given, assume `setup.py develop`.
 if [ ! -f requirements.txt ]; then
   puts-step "No requirements.txt provided; assuming dist package."
