@@ -67,32 +67,79 @@ cd $BUILD_DIR
 # Experimental pre_compile hook.
 source $BIN_DIR/steps/hooks/pre_compile
 
-# Install OpenLDAP
-# Added by Harris Lapiroff 2013, loosely inspired by https://github.com/ohack/heroku-buildpack-python-ldap/
+##############################################################
+# python ldap
+# http://bengillies.tiddlyspace.com/bags/bengillies_public/tiddlers/Python-LDAP%20and%20Oracle%20Enterprise%20Linux
+##############################################################
 
-echo "-----> Installing BerkeleyDB"
-curl -O http://download.oracle.com/berkeley-db/db-4.8.24.NC.tar.gz
-tar -zxvf db-4.8.24.NC.tar.gz
-cd db-4.8.24.NC
-cd build_unix
-../dist/configure --prefix=$BUILD_DIR/.python-ldap/db4
-make
-make install
 cd $BUILD_DIR
-cp -R .python-ldap/db4 $CACHE_DIR/.python-ldap
 
-echo "-----> Fetching and installing openldap"
-curl -O http://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.35.tgz >/dev/null 2>&1
-tar -xvf openldap-2.4.35.tgz
-cd openldap-2.4.35
-./configure --enable-bdb --enable-crypt --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
-echo "-----> Installing ..."
-make depend
-make
-make install
-echo "openldap installed" | indent
-cd $BUILD_DIR
-cp -R .python-ldap/openldap $CACHE_DIR/.python-ldap
+if [ -d $CACHE_DIR/.python-ldap ]; then
+  cp -R $CACHE_DIR/.python-ldap .
+fi
+mkdir -p .python-ldap
+mkdir -p $CACHE_DIR/.python-ldap
+
+# Install python-ldap
+if [ ! -d $BUILD_DIR/.python-ldap/groff ]; then
+  echo "-----> Installing Groff"
+  curl -O ftp://ftp.gnu.org/gnu/groff/groff-1.21.tar.gz
+  tar -zxvf groff-1.21.tar.gz
+  cd groff-1.21
+  ./configure --prefix=$BUILD_DIR/.python-ldap/groff
+  make PROCESSEDEXAMPLEFILES=""
+  make PROCESSEDEXAMPLEFILES="" install
+  cd $BUILD_DIR
+  cp -R .python-ldap/groff $CACHE_DIR/.python-ldap
+fi
+
+echo "-----> Adding soelim to path"
+export PATH=$PATH:$BUILD_DIR/.python-ldap/groff/bin
+
+if [ ! -d $BUILD_DIR/.python-ldap/db4 ]; then
+  echo "-----> Installing BerkeleyDB"
+  curl -O http://download.oracle.com/berkeley-db/db-4.8.24.NC.tar.gz
+  tar -zxvf db-4.8.24.NC.tar.gz
+  cd db-4.8.24.NC
+  cd build_unix
+  ../dist/configure --prefix=$BUILD_DIR/.python-ldap/db4
+  make
+  make install
+  cd $BUILD_DIR
+  cp -R .python-ldap/db4 $CACHE_DIR/.python-ldap
+fi
+
+echo "-----> Changing library paths"
+export LD_LIBRARY_PATH="/usr/lib:/usr/local/lib:$BUILD_DIR/.python-ldap/db4/lib:/usr/local/ssl/lib"
+export LDFLAGS="-L/usr/local/lib -L$BUILD_DIR/.python-ldap/db4/lib -L/usr/local/ssl/lib"
+export CPPFLAGS="-I/usr/local/include -I$BUILD_DIR/.python-ldap/db4/include -I/usr/local/ssl/include"
+echo $LD_LIBRARY_PATH
+echo $LDFLAGS
+echo $CPPFLAGS
+
+if [ ! -d $BUILD_DIR/.python-ldap/openldap ]; then
+  echo "-----> Fetching and installing openldap"
+  curl -O http://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.33.tgz >/dev/null 2>&1
+  echo "-----> Extracting ..."
+  tar -xvf openldap-2.4.33.tgz
+  echo "-----> Moving ..."
+  echo "-----> Change directories ..."
+  cd openldap-2.4.33
+  echo "-----> Configuring ..."
+  ./configure --enable-bdb --enable-crypt --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
+  echo "-----> Installing ..."
+  make depend
+  make
+  #make test
+  make install
+  echo "openldap installed" | indent
+  cd $BUILD_DIR
+  cp -R .python-ldap/openldap $CACHE_DIR/.python-ldap
+fi
+
+##############################################################
+# / python ldap
+##############################################################
 
 # If no requirements given, assume `setup.py develop`.
 if [ ! -f requirements.txt ]; then
