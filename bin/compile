@@ -83,7 +83,7 @@ mkdir -p $CACHE_DIR/.python-ldap
 # Install python-ldap
 
 if [ ! -d $BUILD_DIR/.python-ldap/db4 ]; then
-  echo "-----> Installing BerkeleyDB"
+  puts-step "Installing BerkeleyDB"
   curl -O http://download.oracle.com/berkeley-db/db-4.8.24.NC.tar.gz
   tar -zxvf db-4.8.24.NC.tar.gz
   cd db-4.8.24.NC
@@ -95,7 +95,7 @@ if [ ! -d $BUILD_DIR/.python-ldap/db4 ]; then
   cp -R .python-ldap/db4 $CACHE_DIR/.python-ldap
 fi
 
-echo "-----> Changing library paths"
+puts-step "Changing library paths"
 export LD_LIBRARY_PATH="/usr/lib:/usr/local/lib:$BUILD_DIR/.python-ldap/db4/lib:/usr/local/ssl/lib"
 export LDFLAGS="-L/usr/local/lib -L$BUILD_DIR/.python-ldap/db4/lib -L/usr/local/ssl/lib"
 export CPPFLAGS="-I/usr/local/include -I$BUILD_DIR/.python-ldap/db4/include -I/usr/local/ssl/include"
@@ -104,16 +104,16 @@ echo $LDFLAGS
 echo $CPPFLAGS
 
 if [ ! -d $BUILD_DIR/.python-ldap/openldap ]; then
-  echo "-----> Fetching and installing openldap"
+  puts-step "Fetching and installing OpenLDAP"
   curl -O http://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.33.tgz >/dev/null 2>&1
-  echo "-----> Extracting ..."
+  puts-step "Extracting ..."
   tar -xvf openldap-2.4.33.tgz
-  echo "-----> Moving ..."
-  echo "-----> Change directories ..."
+  puts-step "Moving ..."
+  puts-step "Change directories ..."
   cd openldap-2.4.33
-  echo "-----> Configuring ..."
+  puts-step "Configuring ..."
   ./configure --enable-bdb --enable-crypt --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
-  echo "-----> Installing ..."
+  puts-step "Installing OpenLDAP"
   make depend
   make
   #make test
@@ -130,7 +130,7 @@ fi
 # If no requirements given, assume `setup.py develop`.
 if [ ! -f requirements.txt ]; then
   puts-step "No requirements.txt provided; assuming dist package."
-  echo "-e ." > requirements.txt
+  echo "-e ." > requirements.txt | indent
 fi
 
 # If no runtime given, assume default version.
