@@ -243,11 +243,12 @@ export CPPFLAGS="-I/usr/local/include -I$BUILD_DIR/.python-ldap/openldap/include
 
 # Install dependencies.
 puts-step "Installing dependencies using Pip ($PIP_VERSION)"
-pip install --use-mirrors -r requirements.txt --src ./.heroku/src | indent
+/app/.heroku/python/bin/pip install --use-mirrors -r requirements.txt --src ./.heroku/src | indent
 /app/.heroku/python/bin/pip install --use-mirrors -r requirements.txt --exists-action=w --src=./.heroku/src | cleanup | indent
 #####
 
-pip install -U --no-install python-ldap
+mkdir -p build
+/app/.heroku/python/bin/pip install -U --no-install python-ldap --build build
 cd build/python-ldap
 cat setup.cfg
 sed "s,library_dirs = \(.*\),library_dirs = $BUILD_DIR/.python-ldap/openldap/lib \1,g" setup.cfg > setup.cfg
