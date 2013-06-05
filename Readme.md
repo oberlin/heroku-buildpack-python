@@ -1,9 +1,9 @@
 Heroku buildpack: Python
 ========================
 
-This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Python apps, powered by [pip](http://www.pip-installer.org/).
+This is a custom [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Python apps, powered by [pip](http://www.pip-installer.org/). It was modified for Oberlin College from Heroku's original buildpack to install OpenLDAP and python-ldap.
 
-[![Build Status](https://secure.travis-ci.org/heroku/heroku-buildpack-python.png?branch=master)](http://travis-ci.org/heroku/heroku-buildpack-python)
+[![Build Status](https://secure.travis-ci.org/oberlin/heroku-buildpack-python.png?branch=master)](http://travis-ci.org/oberlin/heroku-buildpack-python)
 
 Usage
 -----
