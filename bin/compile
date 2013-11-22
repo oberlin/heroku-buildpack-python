@@ -126,7 +126,7 @@ if [ ! -d $BUILD_DIR/.python-ldap/openldap ]; then
   puts-step "Change directories ..."
   cd openldap-2.4.33
   puts-step "Configuring ..."
-  ./configure --enable-bdb --enable-crypt --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
+  ./configure --disable-slapd --enable-bdb --enable-crypt --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
   puts-step "Installing OpenLDAP"
   make depend
   make
