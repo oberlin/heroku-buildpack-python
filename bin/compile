@@ -81,6 +81,20 @@ mkdir -p .python-ldap
 mkdir -p $CACHE_DIR/.python-ldap
 
 # Install python-ldap
+if [ ! -d $BUILD_DIR/.python-ldap/groff ]; then
+puts-step "Installing Groff"
+  curl -O ftp://ftp.gnu.org/gnu/groff/groff-1.21.tar.gz
+  tar -zxvf groff-1.21.tar.gz
+  cd groff-1.21
+  ./configure --prefix=$BUILD_DIR/.python-ldap/groff
+  make PROCESSEDEXAMPLEFILES=""
+  make PROCESSEDEXAMPLEFILES="" install
+  cd $BUILD_DIR
+  cp -R .python-ldap/groff $CACHE_DIR/.python-ldap
+fi
+
+puts-step "Adding soelim to path"
+export PATH=$PATH:$BUILD_DIR/.python-ldap/groff/bin
 
 if [ ! -d $BUILD_DIR/.python-ldap/db4 ]; then
   puts-step "Installing BerkeleyDB"
