@@ -30,90 +30,70 @@ source $BIN_DIR/utils
 
 if (grep -Eiq "^\s*python-ldap" requirements.txt) then
   puts-step "Noticed python-ldap. Bootstrapping openldap."
-  cd $BUILD_DIR
   
-  if [ -d $CACHE_DIR/.python-ldap ]; then
-    cp -R $CACHE_DIR/.python-ldap .
+  if [ ! -d $CACHE_DIR/.python-ldap ]; then
+    mkdir -p $CACHE_DIR/.python-ldap
   fi
-  mkdir -p .python-ldap
-  mkdir -p $CACHE_DIR/.python-ldap
   
-  if [ ! -d $BUILD_DIR/.python-ldap/groff ]; then
+  cd $CACHE_DIR/.python-ldap
+  
+  if [ ! -d $CACHE_DIR/.python-ldap/$GROFF_DIST_DIR ]; then
     puts-step "Installing groff"
     curl -o $GROFF_DIST_FILE $GROFF_DIST_URL
     tar -zxf $GROFF_DIST_FILE
     cd $GROFF_DIST_DIR
-    ./configure --prefix=$BUILD_DIR/.python-ldap/groff
+    ./configure --prefix=$BUILD_DIR/.heroku/vendor
     make PROCESSEDEXAMPLEFILES=""
-    make PROCESSEDEXAMPLEFILES="" install
-    cd $BUILD_DIR
-    cp -R .python-ldap/groff $CACHE_DIR/.python-ldap/
   fi
   
-  puts-step "Adding groff tools to path (for soelim)"
-  export PATH=$PATH:$BUILD_DIR/.python-ldap/groff/bin
+  cd $CACHE_DIR/.python-ldap/$GROFF_DIST_DIR
+  make PROCESSEDEXAMPLEFILES="" install
+  cd $CACHE_DIR/.python-ldap
   
-  if [ ! -d $BUILD_DIR/.python-ldap/bdb ]; then
+  if [ ! -d $CACHE_DIR/.python-ldap/$BDB_DIST_DIR ]; then
     puts-step "Installing bdb"
     curl -o $BDB_DIST_FILE $BDB_DIST_URL
     tar -zxf $BDB_DIST_FILE
     cd $BDB_DIST_DIR/build_unix
-    ../dist/configure --prefix=$BUILD_DIR/.python-ldap/bdb
+    ../dist/configure --prefix=$BUILD_DIR/.heroku/vendor
     make
-    make install
-    cd $BUILD_DIR
-    cp -R .python-ldap/bdb $CACHE_DIR/.python-ldap/
   fi
-
-  puts-step "Adding bdb to compiler paths and flags"
-  export C_INCLUDE_PATH=$C_INCLUDE_PATH:$BUILD_DIR/.python-ldap/bdb/lib
-  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$BUILD_DIR/.python-ldap/bdb/lib
-  export LIBRARY_PATH=$LIBRARY_PATH:$BUILD_DIR/.python-ldap/bdb/include
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_DIR/.python-ldap/bdb/include
-  export CFLAGS="$CFLAGS -I$BUILD_DIR/.python-ldap/bdb/include"
-  export CPPFLAGS="$CPPFLAGS -I$BUILD_DIR/.python-ldap/bdb/include"
-  export LDFLAGS="$LDFLAGS -L$BUILD_DIR/.python-ldap/bdb/lib"
   
-  if [ ! -d $BUILD_DIR/.python-ldap/sasl ]; then
+  cd $CACHE_DIR/.python-ldap/$BDB_DIST_DIR/build_unix
+  make install
+  cd $CACHE_DIR/.python-ldap
+  
+  if [ ! -d $CACHE_DIR/.python-ldap/$SASL_DIST_DIR ]; then
     puts-step "Installing sasl"
     curl -o $SASL_DIST_FILE $SASL_DIST_URL
     tar -zxf $SASL_DIST_FILE
     cd $SASL_DIST_DIR
-    ./configure --prefix=$BUILD_DIR/.python-ldap/sasl
+    ./configure --prefix=$BUILD_DIR/.heroku/vendor
     make
-    make install
-    cd $BUILD_DIR
-    cp -R .python-ldap/sasl $CACHE_DIR/.python-ldap/
   fi
   
-  puts-step "Adding sasl to compiler paths and flags"
-  export C_INCLUDE_PATH=$C_INCLUDE_PATH:$BUILD_DIR/.python-ldap/sasl/lib
-  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$BUILD_DIR/.python-ldap/sasl/lib
-  export LIBRARY_PATH=$LIBRARY_PATH:$BUILD_DIR/.python-ldap/sasl/include
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_DIR/.python-ldap/sasl/include
-  export CFLAGS="$CFLAGS -I$BUILD_DIR/.python-ldap/sasl/include -I$BUILD_DIR/.python-ldap/sasl/include/sasl"
-  export CPPFLAGS="$CPPFLAGS -I$BUILD_DIR/.python-ldap/sasl/include -I$BUILD_DIR/.python-ldap/sasl/include/sasl"
-  export LDFLAGS="$LDFLAGS -L$BUILD_DIR/.python-ldap/sasl/lib -L$BUILD_DIR/.python-ldap/sasl/lib/sasl2"
+  cd $CACHE_DIR/.python-ldap/$SASL_DIST_DIR
+  make install
+  cd $CACHE_DIR/.python-ldap
   
-  if [ ! -d $BUILD_DIR/.python-ldap/openldap ]; then
+  if [ ! -d $CACHE_DIR/.python-ldap/$OPENLDAP_DIST_DIR ]; then
     puts-step "Installing openldap"
     curl -o $OPENLDAP_DIST_FILE $OPENLDAP_DIST_URL
     tar -zxf $OPENLDAP_DIST_FILE
     cd $OPENLDAP_DIST_DIR
-    ./configure --disable-slapd --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
+    ./configure --disable-slapd --with-tls=openssl --prefix=$BUILD_DIR/.heroku/vendor
     make depend
     make
-    make install
-    cd $BUILD_DIR
-    cp -R .python-ldap/openldap $CACHE_DIR/.python-ldap/
   fi
   
-  puts-step "Adding openldap to compiler paths and flags"
-  export C_INCLUDE_PATH=$C_INCLUDE_PATH:$BUILD_DIR/.python-ldap/openldap/lib
-  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$BUILD_DIR/.python-ldap/openldap/lib
-  export LIBRARY_PATH=$LIBRARY_PATH:$BUILD_DIR/.python-ldap/openldap/include
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_DIR/.python-ldap/openldap/include
-  export CFLAGS="$CFLAGS -I$BUILD_DIR/.python-ldap/openldap/include"
-  export CPPFLAGS="$CPPFLAGS -I$BUILD_DIR/.python-ldap/openldap/include"
-  export LDFLAGS="$LDFLAGS -L$BUILD_DIR/.python-ldap/openldap/lib"
+  cd $CACHE_DIR/.python-ldap/$OPENLDAP_DIST_DIR
+  make install
+  cd $CACHE_DIR/.python-ldap
+  
+  puts-step "Adding vendor compiler flags"
+  export CFLAGS="$CFLAGS -I$BUILD_DIR/.heroku/vendor/include"
+  export CPPFLAGS="$CPPFLAGS -I$BUILD_DIR/.heroku/vendor/include"
+  export LDFLAGS="$LDFLAGS -L$BUILD_DIR/.heroku/vendor/lib"
+  
+  cd $BUILD_DIR
 fi
