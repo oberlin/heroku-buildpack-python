@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+# This script serves as the python-ldap build step of the
+# [**Python Buildpack**](https://github.com/oberlin/heroku-buildpack-python)
+# compiler.
+#
+# A [buildpack](http://devcenter.heroku.com/articles/buildpacks) is an
+# adapter between a Python application and Heroku's runtime.
+#
+# This script is invoked by [`bin/compile`](/).
+
+GROFF_DIST_URL=ftp://ftp.gnu.org/gnu/groff/groff-1.21.tar.gz
+GROFF_DIST_FILE=groff-1.21.tar.gz
+GROFF_DIST_DIR=groff-1.21
+
+OPENLDAP_DIST_URL=http://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.33.tgz
+OPENLDAP_DIST_FILE=openldap-2.4.33.tgz
+OPENLDAP_DIST_DIR=openldap-2.4.33
+
+# Syntax sugar.
+source $BIN_DIR/utils
+
+# If pylibmc exists within requirements, use vendored libmemcached.
+if (grep -Eiq "^\s*python-ldap" requirements.txt) then
+  puts-step "Noticed python-ldap. Bootstrapping openldap."
+  cd $BUILD_DIR
+  
+  if [ -d $CACHE_DIR/.python-ldap ]; then
+    cp -R $CACHE_DIR/.python-ldap .
+  fi
+  mkdir -p .python-ldap
+  mkdir -p $CACHE_DIR/.python-ldap
+  
+  # Install python-ldap
+  if [ ! -d $BUILD_DIR/.python-ldap/groff ]; then
+  puts-step "Installing groff"
+    curl -o $GROFF_DIST_FILE $GROFF_DIST_URL
+    tar -zxf $GROFF_DIST_FILE
+    cd $GROFF_DIST_DIR
+    ./configure --prefix=$BUILD_DIR/.python-ldap/groff
+    make PROCESSEDEXAMPLEFILES=""
+    make PROCESSEDEXAMPLEFILES="" install
+    cd $BUILD_DIR
+    cp -R .python-ldap/groff $CACHE_DIR/.python-ldap/
+  fi
+  
+  puts-step "Adding groff tools to path (for soelim)"
+  export PATH=$PATH:$BUILD_DIR/.python-ldap/groff/bin
+  
+  if [ ! -d $BUILD_DIR/.python-ldap/openldap ]; then
+    puts-step "Installing openldap"
+    curl -o $OPENLDAP_DIST_FILE $OPENLDAP_DIST_URL
+    tar -zxf $OPENLDAP_DIST_FILE
+    cd $OPENLDAP_DIST_DIR
+    ./configure --disable-slapd --with-tls=openssl --prefix=$BUILD_DIR/.python-ldap/openldap
+    make depend
+    make
+    make install
+    cd $BUILD_DIR
+    cp -R .python-ldap/openldap $CACHE_DIR/.python-ldap/
+  fi
+  
+  puts-step "Adding openldap to include and library paths"
+  export C_INCLUDE_PATH=$C_INCLUDE_PATH:$BUILD_DIR/.python-ldap/openldap/lib
+  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$BUILD_DIR/.python-ldap/openldap/lib
+  export LIBRARY_PATH=$LIBRARY_PATH:$BUILD_DIR/.python-ldap/openldap/include
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_DIR/.python-ldap/openldap/include
+fi
