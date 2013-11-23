@@ -65,4 +65,9 @@ if (grep -Eiq "^\s*python-ldap" requirements.txt) then
   export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$BUILD_DIR/.python-ldap/openldap/lib
   export LIBRARY_PATH=$LIBRARY_PATH:$BUILD_DIR/.python-ldap/openldap/include
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_DIR/.python-ldap/openldap/include
+  
+  puts-step "Adding openldap to compiler flags"
+  export CFLAGS="$CFLAGS -I$BUILD_DIR/.python-ldap/openldap/include"
+  export CPPFLAGS="$CPPFLAGS -I$BUILD_DIR/.python-ldap/openldap/include"
+  export LDFLAGS="$LDFLAGS -L$BUILD_DIR/.python-ldap/openldap/lib"
 fi
