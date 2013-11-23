@@ -248,7 +248,7 @@ puts-step "Installing dependencies using Pip ($PIP_VERSION)"
 #####
 
 mkdir -p build
-/app/.heroku/python/bin/pip install -U --no-install python-ldap --build build
+pip install -U --no-install python-ldap
 if [ -d build/python-ldap ]; then
   cd build/python-ldap
   cat setup.cfg
