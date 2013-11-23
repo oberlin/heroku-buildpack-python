@@ -13,6 +13,14 @@ GROFF_DIST_URL=ftp://ftp.gnu.org/gnu/groff/groff-1.21.tar.gz
 GROFF_DIST_FILE=groff-1.21.tar.gz
 GROFF_DIST_DIR=groff-1.21
 
+BDB_DIST_URL=http://download.oracle.com/berkeley-db/db-5.3.28.NC.tar.gz
+BDB_DIST_FILE=db-5.3.28.NC.tar.gz
+BDB_DIST_DIR=db-5.3.28.NC
+
+SASL_DIST_URL=ftp://ftp.cyrusimap.org/cyrus-sasl/cyrus-sasl-2.1.26.tar.gz
+SASL_DIST_FILE=cyrus-sasl-2.1.26.tar.gz
+SASL_DIST_DIR=cyrus-sasl-2.1.26
+
 OPENLDAP_DIST_URL=http://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.33.tgz
 OPENLDAP_DIST_FILE=openldap-2.4.33.tgz
 OPENLDAP_DIST_DIR=openldap-2.4.33
@@ -20,7 +28,6 @@ OPENLDAP_DIST_DIR=openldap-2.4.33
 # Syntax sugar.
 source $BIN_DIR/utils
 
-# If pylibmc exists within requirements, use vendored libmemcached.
 if (grep -Eiq "^\s*python-ldap" requirements.txt) then
   puts-step "Noticed python-ldap. Bootstrapping openldap."
   cd $BUILD_DIR
@@ -31,9 +38,8 @@ if (grep -Eiq "^\s*python-ldap" requirements.txt) then
   mkdir -p .python-ldap
   mkdir -p $CACHE_DIR/.python-ldap
   
-  # Install python-ldap
   if [ ! -d $BUILD_DIR/.python-ldap/groff ]; then
-  puts-step "Installing groff"
+    puts-step "Installing groff"
     curl -o $GROFF_DIST_FILE $GROFF_DIST_URL
     tar -zxf $GROFF_DIST_FILE
     cd $GROFF_DIST_DIR
@@ -46,6 +52,48 @@ if (grep -Eiq "^\s*python-ldap" requirements.txt) then
   
   puts-step "Adding groff tools to path (for soelim)"
   export PATH=$PATH:$BUILD_DIR/.python-ldap/groff/bin
+  
+  if [ ! -d $BUILD_DIR/.python-ldap/bdb ]; then
+    puts-step "Installing bdb"
+    curl -o $BDB_DIST_FILE $BDB_DIST_URL
+    tar -zxf $BDB_DIST_FILE
+    cd $BDB_DIST_DIR/build_unix
+    ../dist/configure --prefix=$BUILD_DIR/.python-ldap/bdb
+    make
+    make install
+    cd $BUILD_DIR
+    cp -R .python-ldap/bdb $CACHE_DIR/.python-ldap/
+  fi
+
+  puts-step "Adding bdb to compiler paths and flags"
+  export C_INCLUDE_PATH=$C_INCLUDE_PATH:$BUILD_DIR/.python-ldap/bdb/lib
+  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$BUILD_DIR/.python-ldap/bdb/lib
+  export LIBRARY_PATH=$LIBRARY_PATH:$BUILD_DIR/.python-ldap/bdb/include
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_DIR/.python-ldap/bdb/include
+  export CFLAGS="$CFLAGS -I$BUILD_DIR/.python-ldap/bdb/include"
+  export CPPFLAGS="$CPPFLAGS -I$BUILD_DIR/.python-ldap/bdb/include"
+  export LDFLAGS="$LDFLAGS -L$BUILD_DIR/.python-ldap/bdb/lib"
+  
+  if [ ! -d $BUILD_DIR/.python-ldap/sasl ]; then
+    puts-step "Installing sasl"
+    curl -o $SASL_DIST_FILE $SASL_DIST_URL
+    tar -zxf $SASL_DIST_FILE
+    cd $SASL_DIST_DIR
+    ./configure --prefix=$BUILD_DIR/.python-ldap/sasl
+    make
+    make install
+    cd $BUILD_DIR
+    cp -R .python-ldap/sasl $CACHE_DIR/.python-ldap/
+  fi
+  
+  puts-step "Adding sasl to compiler paths and flags"
+  export C_INCLUDE_PATH=$C_INCLUDE_PATH:$BUILD_DIR/.python-ldap/sasl/lib
+  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$BUILD_DIR/.python-ldap/sasl/lib
+  export LIBRARY_PATH=$LIBRARY_PATH:$BUILD_DIR/.python-ldap/sasl/include
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_DIR/.python-ldap/sasl/include
+  export CFLAGS="$CFLAGS -I$BUILD_DIR/.python-ldap/sasl/include -I$BUILD_DIR/.python-ldap/sasl/include/sasl"
+  export CPPFLAGS="$CPPFLAGS -I$BUILD_DIR/.python-ldap/sasl/include -I$BUILD_DIR/.python-ldap/sasl/include/sasl"
+  export LDFLAGS="$LDFLAGS -L$BUILD_DIR/.python-ldap/sasl/lib -L$BUILD_DIR/.python-ldap/sasl/lib/sasl2"
   
   if [ ! -d $BUILD_DIR/.python-ldap/openldap ]; then
     puts-step "Installing openldap"
@@ -60,14 +108,12 @@ if (grep -Eiq "^\s*python-ldap" requirements.txt) then
     cp -R .python-ldap/openldap $CACHE_DIR/.python-ldap/
   fi
   
-  puts-step "Adding openldap to include and library paths"
+  puts-step "Adding openldap to compiler paths and flags"
   export C_INCLUDE_PATH=$C_INCLUDE_PATH:$BUILD_DIR/.python-ldap/openldap/lib
   export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$BUILD_DIR/.python-ldap/openldap/lib
   export LIBRARY_PATH=$LIBRARY_PATH:$BUILD_DIR/.python-ldap/openldap/include
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_DIR/.python-ldap/openldap/include
-  
-  puts-step "Adding openldap to compiler flags"
-  export CFLAGS="$CFLAGS -I$BUILD_DIR/.python-ldap/openldap/include -UHAVE_SASL"
-  export CPPFLAGS="$CPPFLAGS -I$BUILD_DIR/.python-ldap/openldap/include -UHAVE_SASL"
+  export CFLAGS="$CFLAGS -I$BUILD_DIR/.python-ldap/openldap/include"
+  export CPPFLAGS="$CPPFLAGS -I$BUILD_DIR/.python-ldap/openldap/include"
   export LDFLAGS="$LDFLAGS -L$BUILD_DIR/.python-ldap/openldap/lib"
 fi
