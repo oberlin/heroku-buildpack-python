@@ -28,6 +28,8 @@ OPENLDAP_DIST_DIR=openldap-2.4.33
 # Syntax sugar.
 source $BIN_DIR/utils
 
+bpwatch start python_ldap_install
+
 if (grep -Eiq "^\s*python-ldap" requirements.txt) then
   puts-step "Noticed python-ldap. Bootstrapping openldap."
   
@@ -97,3 +99,5 @@ if (grep -Eiq "^\s*python-ldap" requirements.txt) then
   
   cd $BUILD_DIR
 fi
+
+bpwatch stop python_ldap_install
