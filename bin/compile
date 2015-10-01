@@ -172,9 +172,7 @@ source $BIN_DIR/steps/mercurial
 source $BIN_DIR/steps/pylibmc
 
 # Python-ldap support.
-bpwatch start python_ldap_install
-  source $BIN_DIR/steps/python_ldap
-bpwatch stop python_ldap_install
+source $BIN_DIR/steps/python_ldap
 
 # Libffi support.
 source $BIN_DIR/steps/cryptography
